@@ -1,13 +1,11 @@
 mod extract_and_flatten;
 
 //use for mod?
-
 use std::{
     fs,
-    path::{Path, PathBuf},
-    io::{self, Write},
+    path::PathBuf,
+    io::{self},
 };
-use zip::ZipArchive;
 use clap::Parser;
 
 use extract_and_flatten::extract_and_flatten;
@@ -59,4 +57,3 @@ fn main() -> io::Result<()> {
     
     Ok(())
 }
-
