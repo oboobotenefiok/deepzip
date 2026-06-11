@@ -1,4 +1,4 @@
-fn extract_and_flatten(zip_path: &Path, output_dir: &Path) -> io::Result<usize> {
+pub fn extract_and_flatten(zip_path: &Path, output_dir: &Path) -> io::Result<usize> {
     let file = fs::File::open(zip_path)?;
     let mut archive = ZipArchive::new(file)?;
     let mut extracted_count = 0;
