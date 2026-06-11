@@ -1,4 +1,4 @@
-mod extract_and_flatten::extract_and_flatten;
+mod extract_and_flatten;
 
 //use for mod?
 
@@ -6,9 +6,11 @@ use std::{
     fs,
     path::{Path, PathBuf},
     io::{self, Write},
-}
+};
 use zip::ZipArchive;
 use clap::Parser;
+
+use extract_and_flatten::extract_and_flatten;
 
 /// Extract all contents from a zip file into a single folder
 #[derive(Parser, Debug)]
