@@ -26,6 +26,7 @@ Nothing is thrown away. Files DeepSeek cannot handle go into `skipped` so you st
 ## Usage
 
 I simply assume you're using a Linux environment, otherwise just figure it out.
+![Image Example On Termux Mobile](src/images/md.jpg)
 
 ```bash
 deepzip input.zip output_folder
