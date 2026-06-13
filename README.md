@@ -84,7 +84,7 @@ The tests live in `src/classifier.rs` and cover the common cases: known extensio
 
 ## Adding file types
 
-Everything is in `src/classifier.rs` inside the `classify` function. It is a single `match` on the lowercased extension. Adding a new type means adding its extension string to the right arm. It should take about ten seconds.
+Everything is in `src/classifier.rs` inside the `classify` function. It is a single `match` on the lowercased extension. Adding a new type means adding its extension string to the right arm.
 
 ## Project layout
 
