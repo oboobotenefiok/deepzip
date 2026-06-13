@@ -2,11 +2,20 @@
 name = "deepzip"
 version = "0.1.0"
 edition = "2021"
-
-[dependencies]
-zip = "0.6"
-clap = { version = "4.4", features = ["derive"] }
+description = "Unpacks a zip and sorts files into DeepSeek-friendly folders by type"
+authors = ["Obot"]
 
 [[bin]]
 name = "deepzip"
 path = "src/main.rs"
+
+[dependencies]
+# zip gives us everything we need to read archive entries without touching the filesystem first
+zip = "0.6"
+
+# anyhow is the sane way to handle errors in a CLI tool - no need to define
+# a custom error enum when we just want to bail with a message and move on
+anyhow = "1"
+
+# clap handles argument parsing so we don't have to fiddle with std::env::args ourselves
+clap = { version = "4", features = ["derive"] }

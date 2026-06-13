@@ -1,101 +1,118 @@
 # deepzip
 
-A fast, no-fuss CLI tool that extracts zip files into a **single flat directory**
-
-I build this because I want to be able to send zip files easily to Deepseek on mobile without having to go through what I've been going through. I start with a simple version that just unzips it and puts in one folder but subsequent versions will filter out certain file extensions that aren't accepted by deepseek as well as create fifty (50) files per folder as per the file limit of deepseek per message - this will result in multiple folders but quite easier than before.
-
-## What it does
-
-Standard zip extraction preserves the internal folder structure of the archive, which can result in deeply nested directories. `deepzip` ("deep extraction zip") flattens everything: every file ends up directly in the output directory, regardless of how it was organized inside the zip.
+A small CLI tool that unpacks a zip file and sorts its contents into folders that DeepSeek's chat interface will actually accept.
 
 
+## The problem
 
-- Strips all directory structure from extracted files
-- Skips macOS metadata directories (`__MACOSX/`)
-- Automatically renames duplicate filenames (`file_1.txt`, `file_2.txt`, etc.) instead of overwriting
-- Preserves Unix file permissions
-- Shows progress during extraction
+DeepSeek's chat UI does not accept zip files. If you unzip a project and try to upload everything, it will silently reject certain file types anyway. And if your project is spread across dozens of nested folders, manually picking through them to find the uploadable files is a pain.
 
-## Installation
+## What this does
 
-### Linux / macOS
+You hand it a zip and tell it where to put the output. It extracts every file, classifies it by extension, and writes it into a named subfolder. You end up with something like:
 
-```bash
-# Build from source (requires Rust)
-cargo build --release
-
-# Install system-wide
-sudo cp target/release/deepzip /usr/local/bin/
-
-# Or install directly with Cargo
-cargo install --path .
+```
+output/
+  code/        <- .rs, .py, .js, .go, .sql, and everything else that is source
+  text/        <- .txt, .md, .csv, .log, .rst
+  documents/   <- .pdf, .docx, .xlsx, .pptx, .odt
+  images/      <- .png, .jpg, .gif, .webp, .svg, .ico
+  data/        <- .json, .yaml, .toml, .xml, .html, .css, .env, .lock
+  skipped/     <- anything DeepSeek will not accept (videos, binaries, etc.)
 ```
 
-### Termux (Android)
-
-```bash
-# Install Rust
-pkg install rust
-
-# Clone or create the project
-mkdir deepzip && cd deepzip
-
-# Build and install to Termux's bin directory
-cargo build --release
-cp target/release/deepzip $PREFIX/bin/
-```
+Nothing is thrown away. Files DeepSeek cannot handle go into `skipped` so you still have them.
 
 ## Usage
 
-```bash
-# Extract to a directory named after the zip file (default)
-deepzip myfile.zip
-
-# Extract to a custom output directory
-deepzip myfile.zip --output /path/to/output
-
-# Short flag
-deepzip myfile.zip -o ./extracted
-```
-
-## Example
-
-Given a zip with this structure:
-```
-project.zip
-├── src/
-│   ├── main.rs
-│   └── utils.rs
-├── docs/
-│   └── readme.md
-└── __MACOSX/   ← skipped automatically
-```
-
-Running `deepzip project.zip` produces:
-```
-project/
-├── main.rs
-├── utils.rs
-└── readme.md
-```
-
-## Building from source
-
-Requires [Rust](https://rustup.rs/) (stable).
+I simply assume you're using a Linux environment, otherwise just figure it out.
 
 ```bash
-git clone <repo-url>
+deepzip input.zip output_folder
+```
+
+Example:
+
+```bash
+deepzip my_project.zip ./sorted
+```
+
+If `sorted` does not exist it will be created. If two files in the archive have the same name, the second one is renamed automatically (`main_1.rs`, `main_2.rs`, etc.) so nothing is silently overwritten.
+
+## Install
+
+You need Rust. If you do not have it:
+
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+
+Then clone and build:
+
+```bash
+git clone https://github.com/oboobotenefiok/deepzip
 cd deepzip
 cargo build --release
 ```
 
-The binary will be at `target/release/deepzip`.
+The binary ends up at `target/release/deepzip`. You can copy it somewhere on your `PATH`:
+
+```bash
+cp target/release/deepzip ~/.local/bin/
+```
+
+Or run it directly:
+
+```bash
+./target/release/deepzip input.zip output_folder
+```
+
+If you want to build and run in one step, do:
+
+```bash
+cargo run input.zip output_folder
+```
+  
+## Running tests
+
+```bash
+cargo test
+```
+
+The tests live in `src/classifier.rs` and cover the common cases: known extensions, unknown extensions, uppercase extensions, and files with no extension at all.
+
+## Adding file types
+
+Everything is in `src/classifier.rs` inside the `classify` function. It is a single `match` on the lowercased extension. Adding a new type means adding its extension string to the right arm. It should take about ten seconds.
+
+## Project layout
+
+```
+deepzip/
+  src/
+    main.rs        - CLI argument parsing, calls extractor, prints summary
+    classifier.rs  - maps file extensions to category buckets
+    extractor.rs   - opens the zip, walks entries, writes files to disk
+  Cargo.toml       - dependencies: zip, anyhow, clap
+  README.md        - you are here
+```
 
 ## Dependencies
 
-- [`clap`](https://crates.io/crates/clap) — argument parsing
-- [`zip`](https://crates.io/crates/zip) — zip archive handling
+| Crate | Why |
+|-------|-----|
+| `zip` | Reads zip archives entry by entry without loading everything into memory |
+| `anyhow` | Error handling that gives useful messages without a lot of boilerplate |
+| `clap` | CLI argument parsing with automatic help text generation |
 
-## License
+## Notes
 
-MIT
+- Nested directory structure inside the zip is flattened. `src/utils/helper.rs` becomes `helper.rs` in the `code` folder.
+- KINDLY NOTE THAT the tool does not recurse into nested zip files. A `.zip` inside your `.zip` goes to `skipped`. To unzip that, you'll have to run the program again and pass the nested zip(now in the skipped folder) as the new argument.
+- ALSO NOTE: File contents are never inspected, only extensions. A file named `notes.txt` containing a Python script will go to `text`, not `code`. Rename it if that matters.
+
+Feel free to respond with issues and your pull requests. Try as much as possible to keep your contributions in the Rust Programming Language. I may create a detailed CONTRIBUTING.md someday but it's ta-ta for now.
+
+With love,
+
+- Obot

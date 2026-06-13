@@ -1,59 +1,65 @@
-mod extract_and_flatten;
+// This is the front door. It parses the command line, hands off to the
+// extractor, and reports what happened. Nothing clever lives here.
 
-//use for mod?
-use std::{
-    fs,
-    path::PathBuf,
-    io::{self},
-};
+mod classifier;
+mod extractor;
+
+use anyhow::Result;
 use clap::Parser;
+use std::path::PathBuf;
 
-use extract_and_flatten::extract_and_flatten;
-
-/// Extract all contents from a zip file into a single folder
+// The CLI shape: deepzip input.zip output_folder
+// Clap will print nice help text and error messages for free.
 #[derive(Parser, Debug)]
-#[command(name = "deepzip", author, version, about = "Extract zip files into a single flattened directory")]
+#[command(
+    name = "deepzip",
+    about = "Unpacks a zip file and sorts its contents into DeepSeek-friendly folders",
+    long_about = "DeepSeek's chat UI does not accept zip files, and it silently rejects \
+                  several other file types too. This tool unpacks your archive and groups \
+                  the files by type into separate folders so you can upload them without \
+                  guessing which ones will be accepted."
+)]
 struct Args {
-    /// Zip file to extract (can be path or just filename)
-    zip_file: PathBuf,
-    
-    /// Output directory (optional)
-    #[arg(short, long)]
-    output: Option<PathBuf>,
+    // The zip file you want to unpack
+    input: PathBuf,
+
+    // The folder that will be created (or populated) with the sorted output
+    output: PathBuf,
 }
 
-fn main() -> io::Result<()> {
+fn main() -> Result<()> {
     let args = Args::parse();
-    
-    // Check if zip file exists
-    if !args.zip_file.exists() {
-        eprintln!(" Error: Zip file '{}' not found", args.zip_file.display());
-        std::process::exit(1);
+
+    // Make sure the input file actually exists before we try anything else.
+    // Giving a clear error here saves the user from a confusing message later.
+    if !args.input.exists() {
+        anyhow::bail!(
+            "Cannot find the input file: {}",
+            args.input.display()
+        );
     }
-    
-    // Determine output directory (default: zip filename without extension)
-    let output_dir = match args.output {
-        Some(dir) => dir,
-        None => args.zip_file.with_extension(""),
-    };
-    
-    // Create output directory (clean if exists?)
-    if output_dir.exists() {
-        println!("Output directory exists, overwriting files...");
-    } else {
-        fs::create_dir_all(&output_dir)?;
+
+    if !args.input.extension().map_or(false, |ext| ext == "zip") {
+        anyhow::bail!(
+            "Expected a .zip file, but got: {}",
+            args.input.display()
+        );
     }
-    
-    // Extract and flatten
-    match extract_and_flatten(&args.zip_file, &output_dir) {
-        Ok(file_count) => {
-            println!(" Successfully extracted {} files to: {}", file_count, output_dir.display());
-        }
-        Err(e) => {
-            eprintln!(" Extraction failed: {}", e);
-            std::process::exit(1);
-        }
+
+    println!("Opening: {}", args.input.display());
+    println!("Output folder: {}", args.output.display());
+
+    let summary = extractor::extract_and_sort(&args.input, &args.output)?;
+
+    println!("\nDone.");
+    println!("  Files extracted : {}", summary.extracted);
+    println!("  Files skipped   : {}", summary.skipped);
+
+    if summary.skipped > 0 {
+        println!(
+            "\n  Skipped files are types DeepSeek does not accept (see the 'skipped' folder)."
+        );
     }
-    
+
     Ok(())
 }
