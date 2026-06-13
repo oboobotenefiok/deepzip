@@ -33,17 +33,12 @@ fn main() -> Result<()> {
     // Make sure the input file actually exists before we try anything else.
     // Giving a clear error here saves the user from a confusing message later.
     if !args.input.exists() {
-        anyhow::bail!(
-            "Cannot find the input file: {}",
-            args.input.display()
-        );
+        anyhow::bail!("Cannot find the input file: {}", args.input.display());
     }
 
     if !args.input.extension().map_or(false, |ext| ext == "zip") {
-        anyhow::bail!(
-            "Expected a .zip file, but got: {}",
-            args.input.display()
-        );
+        anyhow::bail!("Expected a .zip file, but got: {}", args.input.display());
+        //bail has a return implementation just so you know.
     }
 
     println!("Opening: {}", args.input.display());
@@ -63,3 +58,4 @@ fn main() -> Result<()> {
 
     Ok(())
 }
+//Classifier has no business here except the mod declaration.
