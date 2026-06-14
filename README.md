@@ -111,6 +111,7 @@ deepzip/
 - Nested directory structure inside the zip is flattened. `src/utils/helper.rs` becomes `helper.rs` in the `code` folder.
 - KINDLY NOTE THAT the tool does not recurse into nested zip files. A `.zip` inside your `.zip` goes to `skipped`. To unzip that, you'll have to run the program again and pass the nested zip(now in the skipped folder) as the new argument.
 - ALSO NOTE: File contents are never inspected, only extensions. A file named `notes.txt` containing a Python script will go to `text`, not `code`. Rename it if that matters.
+- Contrary to original plan, this does not sort files into folders of 50 each as per Deepseek's maximum file per message.
 
 Feel free to respond with issues and your pull requests. Try as much as possible to keep your contributions in the Rust Programming Language. I may create a detailed CONTRIBUTING.md someday but it's ta-ta for now.
 
