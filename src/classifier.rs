@@ -42,10 +42,10 @@ pub fn classify(filename: &str) -> Category {
     // case-sensitive comparisons against every variant.
     let ext = std::path::Path::new(filename)
         .extension()
-        .and_then(|e| e.to_str())
+        .and_then(|e| e.to_str()) 
         .unwrap_or("")
         .to_lowercase();
-
+//I would've loved to handle error by propagation here but I'll leave it for now, just for my sanity. Just have to trust those methods won't crash anything.
     match ext.as_str() {
         // Source code - the long list is intentional. DeepSeek handles most
         // languages well and people often have mixed-language projects in a zip.
